@@ -1,4 +1,6 @@
 {
-    "processed_data": "/projects/leelab2/data/AD_DATA/processed/PCG_unaltered/",
-    "phenotypes": "/projects/leelab2/data/AD_DATA/processed/samples_neuropath/"
+    "folders": {
+        "processed": "/projects/leelab2/data/AD_DATA/processed/PCG_unaltered/",
+        "phenotypes": "/projects/leelab2/data/AD_DATA/processed/samples_neuropath/"   
+    }
 }
