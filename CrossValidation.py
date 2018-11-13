@@ -3,7 +3,6 @@ from sklearn.model_selection import KFold
 from MatrixFactorization import FactorizeMatrix, GetRepresentationError
 from FeatureSimilarity import GetTopGenes
 
-
 def CrossValidation(X, k, etas, lambs, foldcount=5):
     '''
     Runs the matrix factorization algorithm for each specified value of eta and lambda
