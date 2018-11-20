@@ -16,19 +16,19 @@ float dot_product(float const * const v1, float const * const v2, const int leng
     return std::inner_product(v1, (v1 + length), v2, 0.0);
 }
 
-float update_gradients(float * const u_i_ptr, float * const v_j_ptr, float e_ij, float eta, float lamb1, int k, std::vector<float> neighbor_average, float lamb2) 
+void update_gradients(float * const u_i_ptr, float * const v_j_ptr, float e_ij, float eta, float lamb1, int k, std::vector<float> neighbor_average, float lamb2) 
 {
     for (int l = 0; l < k; ++l) 
     {
         float u_il = *(u_i_ptr + l);
         float v_jl = *(v_j_ptr + l);
         
-        *(u_i_ptr + l) += eta * (e_ij * v_jl - lamb1 * u_il + lamb2 * neighbor_average[l]);
+        *(u_i_ptr + l) += eta * (e_ij * v_jl - lamb1 * u_il);
         *(v_j_ptr + l) += eta * (e_ij * u_il - lamb1 * v_jl + lamb2 * neighbor_average[l]);
     }
 }
 
-float update_gradients(float * const u_i_ptr, float * const v_j_ptr, float e_ij, float eta, float lamb1, int k) 
+void update_gradients(float * const u_i_ptr, float * const v_j_ptr, float e_ij, float eta, float lamb1, int k) 
 {
     for (int l = 0; l < k; ++l) 
     {
@@ -80,7 +80,7 @@ void Factor(np::ndarray X, np::ndarray U, np::ndarray V,
     int k = U.shape(1);
     float best_error = 0.0;
     int epochs_since_last_best = 0;
-    int early_stopping_epochs = 2;
+    int early_stopping_epochs = 1;
     
     float * train_error_ptr = NULL;
     float * test_error_ptr  = NULL;
@@ -123,19 +123,17 @@ void Factor(np::ndarray X, np::ndarray U, np::ndarray V,
                 std::vector<float> neighbor_average(k, 0.0);
                 for (int n_ind = 0; n_ind < num_neighbors; ++n_ind) 
                 {
-                    int neighbor = p::extract<int>(n_j[n_ind]);
+                    p::list neighbor_list = p::extract<p::list>(n_j[n_ind]);
+                    int neighbor = p::extract<int>(neighbor_list[0]);
+                    float neighbor_weight = p::extract<float>(neighbor_list[1]);
+                    
                     np::ndarray neighbor_vec = p::extract<np::ndarray>(V[neighbor]);
                     float * neighbor_ptr = reinterpret_cast<float *>(neighbor_vec.get_data());
 
                     for (int l = 0; l < k; ++l) 
                     {
-                        neighbor_average[l] += *(neighbor_ptr + l);
+                        neighbor_average[l] += *(neighbor_ptr + l) * neighbor_weight;
                     }
-                }
-
-                for (int l = 0; l < k; ++l)
-                {
-                    neighbor_average[l] /= num_neighbors;
                 }
 
                 update_gradients(u_i_ptr, v_j_ptr, e_ij, eta, lamb1, k, neighbor_average, lamb2);

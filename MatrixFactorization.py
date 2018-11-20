@@ -7,8 +7,8 @@ def CreateLatentVariables(n, g, k, sigma=0.02):
     V = np.random.randn(g, k) * sigma
     return U, V
 
-def FactorizeMatrix(X, U, V, neighbors, eta=0.005, lamb1=0.02, lamb2=0.001, 
-                    num_epochs=200, trainIndices=None, testIndices=None, returnErrorVectors=False):
+def FactorizeMatrix(X, U, V, neighbors=None, eta=0.005, lamb1=0.02, lamb2=0.001, 
+                    num_epochs=10, trainIndices=None, testIndices=None, returnErrorVectors=False):
     '''
     Factorizes the sparse matrix X into the product of two rank k matrices
     U and V using stochastic gradient descent.
@@ -33,6 +33,8 @@ def FactorizeMatrix(X, U, V, neighbors, eta=0.005, lamb1=0.02, lamb2=0.001,
     Returns:
         Matrices U and V representing the latent vectors for each sample and each gene, respectively.
     '''
+    if neighbors is None:
+        neighbors = {}
     if trainIndices is None and testIndices is None:
         knownIndices = np.argwhere(~np.isnan(X)).astype(np.int32)
         np.random.shuffle(knownIndices)
@@ -45,8 +47,8 @@ def FactorizeMatrix(X, U, V, neighbors, eta=0.005, lamb1=0.02, lamb2=0.001,
         trainIndices = trainIndices.astype(np.int32)
         numIndices, _ = trainIndices.shape
         cutoff       = int(numIndices * 0.9)
-        testIndices  = knownIndices[cutoff:, :]
-        trainIndices = knownIndices[:cutoff, :]
+        testIndices  = trainIndices[cutoff:, :]
+        trainIndices = trainIndices[:cutoff, :]
         
     X = X.astype(np.float32)
     U = U.astype(np.float32)
@@ -61,8 +63,8 @@ def FactorizeMatrix(X, U, V, neighbors, eta=0.005, lamb1=0.02, lamb2=0.001,
                trainError, testError, True,
                eta, lamb1, lamb2, num_epochs)
         
-        #trainError = trainError[~np.isnan(trainError)]
-        #testError  = testError[~np.isnan(testError)]
+        trainError = trainError[~np.isnan(trainError)]
+        testError  = testError[~np.isnan(testError)]
         return U, V, trainError, testError
         
     else:

@@ -61,3 +61,4 @@ scratch/
 
 # Misc
 .DS_Store
+.nfs*
