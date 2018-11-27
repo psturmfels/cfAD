@@ -1,6 +1,6 @@
 import numpy as np
 
-def GetTopGenes(V, phenotype_index, gene_indices=None, c=None, cosine=False, correlation=False):
+def GetTopGenes(V, phenotype_index, gene_indices=None, c=None, cosine=False, correlation=False, sortFunc=np.abs):
     '''
     Returns the top genes associated with phenotype given by pheno_type index, assuming
     V is a latent gene-phenotype matrix.
@@ -33,7 +33,7 @@ def GetTopGenes(V, phenotype_index, gene_indices=None, c=None, cosine=False, cor
         V_norms    = np.linalg.norm(V, axis=1)
         association_scores = association_scores / (pheno_norm * V_norms)
     
-    top_gene_indices = association_scores.argsort()[::-1]
+    top_gene_indices = sortFunc(association_scores).argsort()[::-1]
     
     if gene_indices is not None:
         top_gene_indices = gene_indices[top_gene_indices]
