@@ -50,15 +50,18 @@ def GenerateSimulatedData(n = 200, g = 2000, k = 20, avgGenesInPath=100.0, covar
     
     V = np.random.randn(g, k).astype(np.float32) * sigma;
     
+    pathwaySizes = np.random.poisson(lam=avgGenesInPath, size=(k, )) + 1
+    pathwaySizes = (pathwaySizes / np.sum(pathwaySizes)) * g
+    pathwaySizes = pathwaySizes.astype(int)
+    pathwaySizes[0] += g - 1 - np.sum(pathwaySizes)
+    
     for i in range(k):
-        
-            
         numIndices = np.maximum(np.random.randint(low=int(k/4), high=k+1), 1)
         means = np.random.randn(numIndices).astype(np.float32) * sigma
         sigmas = np.random.uniform(low=0.0, high=sigma, size=(numIndices))
         chosenIndices = np.random.choice(k, size=(numIndices,), replace=False)
         
-        numGenes = np.minimum(np.random.geometric(p=1.0/avgGenesInPath) + 1, len(remainingGeneIndices))
+        numGenes = pathwaySizes[i]
         chosenGeneIndices = np.random.choice(len(remainingGeneIndices), size=(numGenes,), replace=False)
         chosenGenes = remainingGeneIndices[chosenGeneIndices]
         
@@ -117,9 +120,9 @@ def MatToMeltDF(im, group_name, x_values=np.arange(400)):
         im = np.concatenate([im, np.tile(im[:, -1], (len(x_values) - numPlotPoints, 1)).T], axis=1)
     
     im_dot_df = pd.DataFrame(im[:, :len(x_values)].T)
-    im_dot_df['num genes identified as significant'] = x_values
-    im_dot_df = pd.melt(im_dot_df, id_vars=['num genes identified as significant'], 
-                        value_name='num identified actually significant')
+    im_dot_df['percent identified as significant'] = x_values
+    im_dot_df = pd.melt(im_dot_df, id_vars=['percent identified as significant'], 
+                        value_name='percent identified actually significant')
     im_dot_df['group'] = group_name
     return im_dot_df
 
@@ -128,14 +131,20 @@ def GetMeanErrorDF(errorsDF, num_folds=5):
     meanErrorsDF = meanErrorsDF.groupby(meanErrorsDF.index).mean()
     return meanErrorsDF
 
-def ScreePlot(X):
+def ScreePlot(X, var_ratio=0.9):
     X = X - np.mean(X, axis=0)
     pca_model = PCA()
     pca_model.fit(X)
+    
+    latent_dim = np.min(np.where(np.cumsum(pca_model.explained_variance_ratio_) > var_ratio)[0])
+    plt.axvline(latent_dim, color='orange')
+    
     ax = plt.gca()
     ax2 = plt.twinx()
     exp_var = sns.lineplot(x=np.arange(len(pca_model.explained_variance_ratio_)), y=pca_model.explained_variance_ratio_, ax=ax, color='b', label='Explained variance')
     sum_var = sns.lineplot(x=np.arange(len(pca_model.explained_variance_ratio_)), y=np.cumsum(pca_model.explained_variance_ratio_), ax=ax2, color='r', label='Cumulative explained variance')
+    
+    plt.title('Scree Plot with latent dimension {}'.format(latent_dim))
     
     lines, labels = ax.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()

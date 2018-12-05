@@ -15,7 +15,7 @@ def GetDataFrame(filename, sep='\t', header=0):
     '''
     return pd.read_csv(filename, sep=sep, header=header)
 
-def JoinGenes(df1, df2, gene_col_name='PCG'):
+def JoinGenes(df1, df2, index_name='PCG'):
     '''
     Joins two data frames that represent gene expression matrices.
     Each row represents a gene, and each column represents a sample.
@@ -23,13 +23,18 @@ def JoinGenes(df1, df2, gene_col_name='PCG'):
     Args:
         df1: The first data frame.
         df2: The second data frame. 
-        gene_col_name: The name of the column that contains the gene names.
+        gene_col_name: The name of the index that contains the gene names.
 
     Returns: A data frame that represents merging the two input data frames on
              the gene column name.
 
     '''
-    return df1.merge(df2, on=gene_col_name)
+    if df1 is None:
+        return df2
+    elif df2 is None: 
+        return df1
+    else:
+        return df1.merge(df2, on=index_name, how='outer')
 
 def JoinGenePheno(geneDF, phenoDF):
     '''
@@ -43,8 +48,9 @@ def JoinGenePheno(geneDF, phenoDF):
              e.g., a new data frame where each row represents a biological trait (gene
              expression or phenotype), and each column represents a sample.
     '''
-    phenoDF = phenoDF.set_index('sample_name').T.rename_axis('PCG').rename_axis(None, 1).reset_index()
-    return pd.concat([geneDF, phenoDF], ignore_index=True, sort=False)
+    phenoDF = phenoDF.set_index('sample_name').T.rename_axis('PCG').rename_axis(None, 1).reset_index().set_index('PCG')
+    phenoDF.columns = phenoDF.columns.astype(int)
+    return pd.concat([geneDF, phenoDF], sort=False)
 
 def JoinMultipleGenes(*dfs):
     '''

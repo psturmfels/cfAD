@@ -1,6 +1,7 @@
 {
     "folders": {
-        "processed": "/projects/leelab2/data/AD_DATA/processed/PCG_unaltered/",
+        "raw": "/projects/leelab2/data/AD_DATA/processed/PCG_unaltered/",
+        "processed": "/projects/leelab2/data/AD_DATA/uncorrected_PCG_residuals_from_covars/",
         "phenotypes": "/projects/leelab2/data/AD_DATA/processed/samples_neuropath/"   
     }
 }
