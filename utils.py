@@ -33,9 +33,9 @@ def GenerateRegressedPhenotype(X, numPhenotypes=1, lam=1, binaryPathwayMatrix=No
             
     
 #LATENT FACTOR MODEL GENERATION
-def GenerateSimulatedData(n = 200, g = 2000, k = 20, avgGenesInPath=100.0, covariateU=False):
+def GenerateSimulatedData(n = 200, g = 2000, k = 20, numPathways = 20, avgGenesInPath=100.0, covariateU=False):
     sigma = 0.5
-    binaryPathwayMatrix = np.zeros((g, k))
+    binaryPathwayMatrix = np.zeros((g, numPathways))
     remainingGeneIndices = np.arange(1, g)
     
     if covariateU:
@@ -50,12 +50,12 @@ def GenerateSimulatedData(n = 200, g = 2000, k = 20, avgGenesInPath=100.0, covar
     
     V = np.random.randn(g, k).astype(np.float32) * sigma;
     
-    pathwaySizes = np.random.poisson(lam=avgGenesInPath, size=(k, )) + 1
+    pathwaySizes = np.random.poisson(lam=avgGenesInPath, size=(numPathways, )) + 1
     pathwaySizes = (pathwaySizes / np.sum(pathwaySizes)) * g
     pathwaySizes = pathwaySizes.astype(int)
     pathwaySizes[0] += g - 1 - np.sum(pathwaySizes)
     
-    for i in range(k):
+    for i in range(numPathways):
         numIndices = np.maximum(np.random.randint(low=int(k/4), high=k+1), 1)
         means = np.random.randn(numIndices).astype(np.float32) * sigma
         sigmas = np.random.uniform(low=0.0, high=sigma, size=(numIndices))
@@ -78,7 +78,7 @@ def GenerateSimulatedData(n = 200, g = 2000, k = 20, avgGenesInPath=100.0, covar
         binaryPathwayMatrix[chosenGenes, i] = 1
         
     
-    binaryPathwayMatrix[0, :] = np.zeros(k)
+    binaryPathwayMatrix[0, :] = np.zeros(numPathways)
     return U, V, binaryPathwayMatrix, phenotypeGenes
 
 #Helper functions
@@ -168,3 +168,19 @@ def ScreePlot(X, var_ratio=0.9):
     ax.set_axisbelow(True)
     ax2.set_axisbelow(True)
     ax2.grid(False)
+    
+def plotIndices(tg_summed, names, indices, x_values, ci=None):
+    dfs = []
+    for i in range(len(indices)):
+        dfs.append(MatToMeltDF(tg_summed[:, indices[i], :], group_name = names[i], x_values=x_values))
+    sns.lineplot(x='percent identified as significant', y='percent identified actually significant', hue='group', 
+             data=pd.concat(dfs), ci=ci)
+
+def DFtoDataset(df, n=500, scale=False):
+    X = df[[str(i) for i in np.arange(n)]].values.T
+    if (scale):
+        X = preprocessing.scale(X)
+    binaryPathwayMatrix = df[['pathway{}'.format(i) for i in range(df.shape[1] - n - 2)]].values
+    phenotypeGenes = df['phenotype_genes']
+    phenotypeGenes = np.where(phenotypeGenes == 1)[0]
+    return X, binaryPathwayMatrix, phenotypeGenes

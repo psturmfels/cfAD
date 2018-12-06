@@ -126,14 +126,20 @@ def CrossValidation(X, k, hyper_params, neighbors=None, foldcount=5, returnVecto
     else:
         return errorsDF
 
-def PlotErrorDF(errorDF, id_vars=['epochs', 'fold']):
+def PlotErrorDF(errorDF, id_vars=['epochs', 'fold'], ax=None):
     data = pd.melt(errorDF, id_vars=id_vars, value_name='error', var_name='run')
-    ax = sns.lineplot(x='epochs', y ='error', hue='run', data=data)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    if ax is not None:
+        ax = sns.lineplot(x='epochs', y ='error', hue='run', data=data, ax=ax, legend=False)
+    else: 
+        ax = sns.lineplot(x='epochs', y ='error', hue='run', data=data, legend='brief')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     return ax
 
-def PlotParamDF(paramDF, id_vars=['error', 'fold']):
+def PlotParamDF(paramDF, id_vars=['error', 'fold'], ax=None):
     data = pd.melt(paramDF, id_vars=id_vars, value_name='param_value', var_name='param_type')
-    ax = sns.lineplot(x='param_value', y='error', hue='param_type', data=data)
+    if ax is not None:
+        ax = sns.lineplot(x='param_value', y='error', hue='param_type', data=data, ax=ax)
+    else:
+        ax = sns.lineplot(x='param_value', y='error', hue='param_type', data=data)
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     return ax
