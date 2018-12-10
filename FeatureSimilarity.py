@@ -28,8 +28,8 @@ def GetTopGenes(V, phenotype_index, gene_indices=None, c=None, rankType='dot', c
         association_scores = -1.0 * np.linalg.norm(V - phenotype_vector, axis=1)
     else:
         if rankType == 'corr':
-            phenotype_vector = phenotype_vector - np.mean(phenotype_vector)
-            V = V - np.mean(V, axis=1, keepdims=True)
+            phenotype_vector = phenotype_vector - np.nanmean(phenotype_vector)
+            V = V - np.nanmean(V, axis=1, keepdims=True)
 
         association_scores = np.dot(V, phenotype_vector)
         if rankType == 'cos' or rankType == 'corr':

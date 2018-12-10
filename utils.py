@@ -114,15 +114,16 @@ def GetNeighborDictionary(binaryPathwayMatrix, percentileThreshold=95):
     
     return neighbors
 
-def MatToMeltDF(im, group_name, x_values=np.arange(400)):
+def MatToMeltDF(im, group_name, x_values=np.arange(400),
+                x_name='percent identified as significant', y_name='percent identified actually significant'):
     numReps, numPlotPoints = im.shape
     if len(x_values) > numPlotPoints:
         im = np.concatenate([im, np.tile(im[:, -1], (len(x_values) - numPlotPoints, 1)).T], axis=1)
     
     im_dot_df = pd.DataFrame(im[:, :len(x_values)].T)
-    im_dot_df['percent identified as significant'] = x_values
-    im_dot_df = pd.melt(im_dot_df, id_vars=['percent identified as significant'], 
-                        value_name='percent identified actually significant')
+    im_dot_df[x_name] = x_values
+    im_dot_df = pd.melt(im_dot_df, id_vars=[x_name], 
+                        value_name=y_name)
     im_dot_df['group'] = group_name
     return im_dot_df
 
